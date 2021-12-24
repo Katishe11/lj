@@ -1,0 +1,582 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: rgb(127, 145, 163);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+//////////////////////////////////////////////////
+pragma solidity >0.7.0 <0.9.0;
+
+
+	contract Chanin{
+
+
+	struct User{
+		string login;
+		string password;
+		uint balance;
+		bool role;
+		bool logged;
+	}
+
+	address[] public userlist;
+	uint public adminAmount;
+	mapping(address=>User) public us;
+	mapping(string=>address) addresses;
+	
+
+	struct Transfer{
+		address toUs;
+		address fromUs;
+		string description;
+		string codeword;
+		uint value;
+		uint time;
+		bool status;
+	}
+
+	Transfer[] public transfers;
+	uint public transferId;
+	
+
+	constructor() {
+		us[]=User("zero","zero",100000000,true,true);
+	}
+
+	modifier isAdmin() {
+		require(us[msg.sender].role);
+		_;
+	}
+
+	function createUser(address addr,string memory lg,string memory pw) public {
+		require(msg.sender == ,"error:no zero address");
+		require(addresses[lg]==address(0),"error:doesn't exit account);
+		us[addr]=User(lg,pw,0,false,false);
+		addresses[lg]=addr;
+		userlist.push(addr);
+	}
+
+	function getUserAmount() view public returns(uint) {
+		return(userlist.length);
+	}
+
+	function getUserList() view public returns(address[] memory) {
+		return(userlist);
+	}
+
+	function getAddr(string memory lg) view public returns(address) {
+		return addresses[lg];
+	}
+
+	function logged(address Us) view public returns(bool) {
+		return us[Us].logged;
+	}
+
+	function logOut(strig memory lg) public {
+		require(msg.sender==addresses[lg]);
+		require(addresses[lg]==address(0));
+		require(us[addresses[lg]].logged == true);
+		us[addresses[lg]].logged = false;
+	}
+
+	function createTransfer(address addr,string memory codeword,string memory description) public payable {
+		require(msg.value > 0,"error:prise is less than zero");
+		require(msg.sender != addr,"error:invalid user address");
+		require(addr !=address(0),"error:address is equal to zero");
+		transfers.push(Transfer(addr,msg.sender,description,codeword,msg.value,0,true);
+		TransferId++;
+	}
+		
+
+	
+
+	function confirTransfer(uint transferId,string memory codeword) public payable {
+		require(transfers[transferId].toUs==msg.sender);
+		require(transfers[transferId].status==true);
+	if (keccak256(bytes(transfers[transferId].codeword))==keccak256(bytes(codeword))) {
+		payable(msg.sender).transfer(transfers[transferId].value);
+		transfers[transferId].time=block.timestamp;
+		transfers[transferId].status=false;
+	}
+
+	else{
+		payable(transfers[transferId].transfer(transfers[transferId].value);
+	}
+	}
+
+	
+	function cancelTransfer(uint transferId) public payable {
+		reqiure(transfers[transferId].fromUs==msg.sender,"error:wrong address");
+		require(transfers[transferId].status==true,"error:wrong status");
+		payable(msg.sender).transfer(transfers[transferId].value);
+		transfers[transferId].status=false;
+	}
+		
+	function getTransferID() view public returns(uint) {
+		return(transfers.length-1);
+	}
+
+	function getBalance(address addr) view public returns(uint) {
+		return addr.balance;
+	}
+
+	function getAdminAmount() view public returns(uint) {
+		return adminAmount;
+	}
+
+	function getTransfer(uint transferId) view public returns(address,address,string memory,string memory,uint,uint,bool) {
+		return(
+			transfers[transferId].toUs,
+			transfers[transferId].fromUs,
+			transfers[transferId].description,
+			transfers[transferId].codeword,
+			transfers[transferId].value,
+			transfers[transferId].time,
+			transfers[transferId].status
+			);
+	}		
+	function changeRole(address user) public isAdmin{
+		require(us[user].role != true);
+		us[user].role=true;
+		adminAmount++;
+	}
+
+
+  ////////////////////////////////////////////////////
+  import {useContext,createContext} from 'react'
+export const Context=createContext()
+export const  UseContext=()=>useContext(Context)
+
+//////////////////////////////////////////////
+
+import React, {useState} from "react"
+import { BrowserRouter as Router} from "react-router-dom"
+import Web3 from "web3"
+
+import {UserList} from "./Contract/UserList"
+import {Context} from "./Contract/Context"
+import Routers from "./router"
+
+const App = () => {
+  const [web3] = useState (new Web3("http://127.0.0.1:8545"))
+  const Addr = "0xdb81d5ff10fc3bf0ab342b5a577704bcd3f469a9"
+  const [Contract] = useState(new web3.eth.Contract(UserList, Addr))
+
+  return (
+    <Router>
+        <Context.Provider value= {{web3, Contract}}>
+        <Routers/>
+      </Context.Provider>
+    </Router>
+  ) 
+}
+export default App;
+
+////////////////////////////////////////////////////////
+import React from "react";
+import { Switch, Route } from "react-router-dom";
+import Page_1 from "./Pages/Page_1"
+import Page_2 from "./Pages/Page_2"
+import Page_3 from "./Pages/Page_3"
+import Page_4 from "./Pages/Page_4"
+
+const Routers =()=> {
+    return (
+        <>
+            <Switch>
+                <Route path='/' component={Page_1} exact />
+                <Route path='/Page_1' component={Page_1} exact/>
+                <Route path='/Page_2' component={Page_2} exact/>
+                <Route path='/Page_3' component={Page_3} exact/>
+                <Route path='/Page_4' component={Page_4} exact/>
+            </Switch>
+        </>
+    )
+}
+
+export default Routers
+//////////////////////////////////////////////////////////
+import React from "react";
+import {useHistory} from 'react-router-dom'
+import "./vid.css"
+
+const Page_1 =()=> {
+    const history = useHistory()
+
+    async function perehod1() {
+        history.push('/Page_2')
+    }
+
+    async function perehod2(){
+        history.push('/Page_3')
+    }
+
+    return (
+        <div className="container">
+            <h3>Регистрация/Вход</h3>
+            <button style = {{width: "200px"}} onClick={perehod1}>Peгистрация</button>
+            <button style = {{width: "200px"}} onClick={perehod2}>Вход</button>
+        </div>
+    )
+}
+export default Page_1
+/////////////////////////////////////////////////////
+import React, { useState } from "react";
+import { UseContext } from "../Contract/Context";
+import {useHistory, Link} from 'react-router-dom'
+import "./vid.css"
+
+const Page_2 = () => {                                                                                
+    const {web3, Contract} = UseContext()                                                      
+    const [login, setLogin] = useState('')                                                         
+    const [password, setPassword] = useState('')                                                      
+    const history = useHistory()                                                                   
+    sessionStorage.setItem('login', login)                                                      
+                                                                                            
+
+    async function Registration (e)  {
+            e.preventDefault();
+            const address = await web3.eth.personal.newAccount(password)
+            const accounts = await web3.eth.personal.getAccounts()
+            await web3.eth.personal.unlockAccount(accounts[0], "123", 11111110)
+            try {
+                Contract.methods.createUser(address, login, password).send({ from: accounts[0]})
+                await web3.eth.sendTransaction({from: accounts[0], to: address, value: 50 * (10**18) })
+                web3.eth.defaultAccount = address
+                alert('Аккаунт создан')
+                history.push('/Page_1')
+            
+        }
+        catch(e) {
+            alert(e)
+            alert('Аккаунт не создан')
+        }
+
+    }
+        return (
+            <div className="container">
+            <h3> Регистрация </h3>
+            <input required placeholder='Придумайте Логин' value={login} onChange={(e) => setLogin(e.target.value)}/>  <br/>
+            <input required placeholder='Придумайте Пароль' type="password" value={password} onChange={(e) => setPassword(e.target.value)}/> <br/>
+            <button onClick={Registration}>Зарегистрироваться</button><br/>
+            <br/><Link to="./Page_1"><button className="button">Назад</button></Link>
+
+            </div>
+        )
+}
+export default Page_2
+///////////////////////////////////////////////////
+import React, { useState } from "react";
+import {useHistory,Link} from 'react-router-dom'
+import { UseContext } from "../Contract/Context";
+import "./vid.css"
+
+
+const Page_3 = () => {
+    const {web3, Contract} = UseContext()
+    const [login, setLogin] = useState('')
+    const [password, setPassword] = useState('')
+    const [address, setAddress] = useState()
+    const history = useHistory()
+    sessionStorage.setItem('login', login)
+    sessionStorage.setItem('address', address)
+
+
+    async function authorization (e)  {
+        e.preventDefault();
+        try{
+            const address = await Contract.methods.getAddr(login).call()
+                await web3.eth.personal.unlockAccount(address, password, 111111111)
+                web3.eth.defaultAccount = address
+                setAddress(address)
+                history.push('/Page_4')
+            }
+        catch(e) {
+            alert(e) 
+        }
+    }
+
+        return (
+            <div className= "container">
+            <h3> Авторизация </h3>
+            <input required placeholder='Ваш Логин' value={login} onChange={(e) => setLogin(e.target.value)}/>  <br/>
+            <input required placeholder='Ваш Пароль' type="password" value={password} onChange={(e) => setPassword(e.target.value)}/> <br/>
+            <button onClick={authorization}>Авторизация</button>
+            <Link to ="./Page_1"><button className = "button">Назад</button></Link>
+            </div>
+        )
+}
+export default Page_3
+///////////////////////////////////////////////////
+import React, {useEffect, useState}  from "react"
+import {useHistory} from 'react-router-dom'
+import { UseContext } from "../Contract/Context";
+
+
+const Page_4 = () => {
+    const {web3, Contract} = UseContext()
+    const history = useHistory()
+    const login = sessionStorage.getItem('login')
+    const address = sessionStorage.getItem('address')
+
+    const [value, setValue] = useState()
+    const [addressFrom, setAddressFrom] = useState()
+    const [addressTo, setAddressTo] = useState()
+    const [codeWord, setCodeWord] = useState()
+    const [description, setDescription] = useState()
+    const [balance, setBalance] = useState()
+    const [pattern, setPattern] = useState()
+    let [amountYesVote, setAmountYesVote] = useState()
+    const [adminAmount, setAdminAmount] = useState()
+    let [amountNoVote, setAmountNoVote] = useState(0)
+    let [transferId, setTransferId] = useState() 
+
+    useEffect(() => {
+        getBalance()
+        console.log(amountYesVote)
+    }, 
+    [])
+
+    async function getBalance() {
+        let balance = await Contract.methods.getBalance(address).call() / 10**18;
+        setBalance(balance);
+    }
+
+    async function logOutForInterface()  {
+        web3.eth.personal.lockAccount(address);
+        alert("Вы вышли из аккаунта");
+        history.push('/Page_1');
+    }
+
+
+    async function createTransfer(e) {
+        e.preventDefault();
+        try {
+            await Contract.methods.createTransfer(addressTo, codeWord, description).send({from:address, value: value * (10**18)})
+            const transferId = await Contract.methods.getTransferID().call();
+            e.target.reset()
+            alert(`ID перевода: ${transferId};
+                   Кодовое слово: ${codeWord}`);
+            getBalance()
+        }
+        catch(e) {
+            alert(e + 'Ошибка в переводе')
+        }
+    }
+
+    async function confirmTransfer(e) {
+        e.preventDefault() 
+        try {
+            await Contract.methods.confirmTransfer(transferId, codeWord).send({from: address})
+            e.target.reset()
+            alert(`Перевод от пользователя ${address} принят`)
+            getBalance()
+        }
+        catch(e) {
+            alert(e + 'Ошибка в принятие')
+        }
+    }
+
+    async function cancelTransfer(e) {
+        e.preventDefault() 
+        try {
+            await Contract.methods.cancelTransfer(transferId).send({from: address})
+            e.target.reset()
+            alert(`Перевод ${transferId} отменён`)
+            getBalance()
+        }
+        catch(e) {
+            alert(e + ' Ошибка в отмене перевода')
+        }
+    }
+
+    async function transferAmount(e) {
+        e.preventDefault()
+        try {
+            let transfersId = await Contract.methods.getTransferID().call()
+            alert(transfersId)
+        }
+        catch(e) {
+            alert(e)
+        }
+    }
+
+    async function startVotting(e) {
+        e.preventDefault()
+
+        document.getElementById('startVote').style.visibility = 'hidden';
+        document.getElementById('inputForVotting').disabled = !document.getElementById('inputForVotting').disabled;
+        document.getElementById('No').style.visibility = 'visible'
+        document.getElementById('Yes').style.visibility = 'visible'
+
+    }
+
+    async function yesVote(e) {
+        e.preventDefault()
+        try {
+
+            if (adminAmount == amountYesVote) {
+                Contract.methods.changeRole(addressTo).send({from: address})
+                console.log(amountYesVote)
+                setAmountYesVote(amountYesVote = 0)
+                setAmountYesVote(amountYesVote = 0)
+                document.getElementById('inputForVotting').disabled = !document.getElementById('inputForVotting').disabled;
+                document.getElementById('No').style.visibility = 'hidden'
+                document.getElementById('Yes').style.visibility = 'hidden'
+                document.getElementById('startVote').style.visibility = 'visible ';
+                alert('Этот пользователь стал администратором')
+            }
+            
+            else {
+                setAmountYesVote(amountYesVote++)
+                alert('Вы проголосовали')
+            }
+        }
+        catch(e) {
+            alert(e)
+        }
+    }
+
+    async function notVote(e) {
+        e.preventDefault()
+        try {
+            
+            setAmountNoVote(amountNoVote + 1)
+            if (amountNoVote == 0 ) {
+                document.getElementById('inputForVotting').disabled = !document.getElementById('inputForVotting').disabled;
+                document.getElementById('No').style.visibility = 'hidden'
+                document.getElementById('Yes').style.visibility = 'hidden'
+                document.getElementById('startVote').style.visibility = 'visible ';
+                setAmountNoVote(0)
+                setAmountYesVote(0)
+                setAdminAmount(adminAmount + 1)
+                alert('Вы отменили голосование')
+            }
+
+        }
+        catch(e) {
+            alert(e)
+        }
+    }
+    
+    async function  getAmountAdminsForInterface(e) {
+        e.preventDefault()
+        let adminAmount = await Contract.methods.getAmountAdmins().call()
+        setAdminAmount(adminAmount)
+        console.log(adminAmount)
+    }
+    
+    async function getHistoryTransaction(e) {
+        e.preventDefault()
+        try {
+            let transfersId = await Contract.methods.getTransferID().call()
+                
+                for (let i = 0; i <= transfersId; i++) {
+                    
+                    const array = await Contract.methods.getTransfer(i).call()
+                        
+                        if (array[0] === address || array[1] === address) {
+                            console.log(array)
+                            
+                        }
+
+                }
+            }
+        catch(e) {
+            alert(e)
+        }
+    }
+    
+        return (
+            <>
+            <h1>Login: {login}</h1>
+            <h1>Address: {address}</h1>
+            <h1>Баланс: {balance} ETH</h1>
+            <button onClick={logOutForInterface}>Выйти из аккаунта </button><br/><br/><br/><br/><br/>
+
+
+            <form onSubmit={createTransfer}> 
+            <h2>Создать перевод денег.</h2> <br/>
+            <input required placeholder='Адрес получателя' onChange={(e) => setAddressTo(e.target.value)}/> <br/>
+            <input required placeholder='Сумма' onChange={(e) => setValue(e.target.value)}/><br/>
+            <input required placeholder='Кодовое слово' onChange={(e) => setCodeWord(e.target.value)}/><br/>
+            <input required placeholder='Описание' onChange={(e) => setDescription(e.target.value)}/><br/>
+            <button>Отправить</button>
+            </form>
+
+            <form onSubmit={confirmTransfer}> 
+            <h2>Принять перевод денег.</h2>
+            <input required placeholder='Номер транзакции' onChange={(e) => setTransferId(e.target.value)}/>
+            <input required placeholder='Кодовое слово' onChange={(e) => setCodeWord(e.target.value)}/>
+            <button>Принять</button>
+            </form>
+            
+            <form onSubmit={cancelTransfer}> 
+            <h2>Отменить перевод денег.</h2>
+            <input required placeholder='Номер транзакции' onChange={(e) => setTransferId(e.target.value)}/>
+            <button>Отменить</button>
+            </form>
+
+            <form onSubmit={getHistoryTransaction}> 
+            <h2>История транзакции.</h2>
+            <button>Узнать</button><br/>
+            </form>
+
+            <form onSubmit={transferAmount}>
+                <button>Количество переводов в системе</button>
+            </form>
+
+            <form onSubmit={confirmTransfer}> 
+                <h2>Голосование на становления администратором.</h2>
+                <input required  placeholder='Адрес пользователя' id='inputForVotting' onChange={(e) => setAddressTo(e.target.value)}/>
+                <button id ="startVote" onClick={startVotting}>Начать голосование</button>
+            </form>
+                <button id='Yes' onClick = {yesVote} style={{visibility: "hidden"}} >Yes</button>
+                <button id="No" onClick={notVote} style={{visibility: "hidden"}}>No</button>
+
+            <form onSubmit={getAmountAdminsForInterface}>
+                <button>Click</button>
+            </form>
+
+
+
+            </>
+
+        )
+
+
+}
+
+export default Page_4
+//////////////////////////////////////////
+(vid.css)
+.container{
+  position: absolute;
+  border: 500px;
+  border-radius: 12px;
+  top:39%;
+  left: 40%;
+  background: none; 
+  display: block; 
+  text-align: center;
+  border: 2px solid #000000; 
+  padding: 14px 40px; 
+  width: 200px; 
+  outline: none; 
+  color: white; 
+  border-radius: 24px; 
+  transition: 0.50s; 
+  cursor: pointer;
+  position: absolute;
+  background-color:rgb(109, 111, 103);    
+}
+
